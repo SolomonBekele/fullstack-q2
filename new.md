@@ -348,7 +348,7 @@ The project uses a customized Webpack configuration tailored to ETChat's specifi
 The following npm scripts define the development workflow:
 
 #### 4.2.1 Start Script
-**Typical Command:** `node server.js` (or similar)
+**Typical Command:** `react-scripts start`
 **Purpose:** Serves a pre-built production application.
 **Usage:** After running `npm run build`, use this command to serve the static files.
 
