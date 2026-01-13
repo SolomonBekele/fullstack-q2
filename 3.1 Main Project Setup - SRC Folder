@@ -1,0 +1,854 @@
+# **Main Project Setup - SRC Folder**
+
+## **📚 Table of Contents**
+
+### **[Chapter 1: SRC Folder Structure Overview](#chapter-1-src-folder-structure-overview)**
+- [1.1 Project Root Organization](#11-project-root-organization)
+- [1.2 SRC Folder Architecture](#12-src-folder-architecture)
+- [1.3 Key Directories and Their Purposes](#13-key-directories-and-their-purposes)
+
+### **[Chapter 2: Main Entry Points](#chapter-2-main-entry-points)**
+- [2.1 React Entry Point - `index.tsx`](#21-react-entry-point---indextsx)
+- [2.2 App Component - `App.tsx`](#22-app-component---apptsx)
+- [2.3 Public HTML File - `public/index.html`](#23-public-html-file---publicindexhtml)
+
+### **[Chapter 3: Single Page Application Architecture](#chapter-3-single-page-application-architecture)**
+- [3.1 SPA Concept in React](#31-spa-concept-in-react)
+- [3.2 Virtual DOM vs Real DOM](#32-virtual-dom-vs-real-dom)
+- [3.3 React Rendering Mechanism](#33-react-rendering-mechanism)
+
+### **[Chapter 4: State Management Providers](#chapter-4-state-management-providers)**
+- [4.1 Redux Provider (`<Provider store={store}>`)](#41-redux-provider-provider-storestore)
+- [4.2 Redux Architecture Pattern](#42-redux-architecture-pattern)
+- [4.3 Redux Persist (`<PersistGate loading={null} persistor={persistor}>`)](#43-redux-persist-persistgate-loadingnull-persistorpersistor)
+- [4.4 Persist Configuration (`persistConfig.ts`)](#44-persist-configuration-persistconfigts)
+- [4.5 State Reconciliers](#45-state-reconciliers)
+
+### **[Chapter 5: Routing and Navigation](#chapter-5-routing-and-navigation)**
+- [5.1 React Router (`<BrowserRouter>`)](#51-react-router-browserrouter)
+- [5.2 Client-Side Routing](#52-client-side-routing)
+- [5.3 Navigation Without Page Reloads](#53-navigation-without-page-reloads)
+
+### **[Chapter 6: Development Tools and Utilities](#chapter-6-development-tools-and-utilities)**
+- [6.1 React Strict Mode (`<StrictMode>`)](#61-react-strict-mode-strictmode)
+- [6.2 Duplicate Tab Handler (`<DuplicateTabHandler>`)](#62-duplicate-tab-handler-duplicatetabhandler)
+- [6.3 Development Mode Features](#63-development-mode-features)
+
+---
+
+## **Chapter 1: SRC Folder Structure Overview**
+
+### **1.1 Project Root Organization**
+
+**Project Structure**:
+```
+chat-application/
+├── public/                    # Static assets and HTML entry point
+│   ├── index.html           # Main HTML file
+│   ├── manifest.json        # PWA manifest
+│   └── 3rdparty/           # Third-party libraries
+├── src/                     # Source code - COMPLETE CODE BASE
+│   ├── index.tsx           # MAIN ENTRY POINT
+│   ├── App.tsx             # Main App component
+│   ├── store/              # Redux store configuration
+│   ├── components/         # React components
+│   ├── pages/              # Page components
+│   ├── hooks/              # Custom React hooks
+│   ├── utils/              # Utility functions
+│   ├── api/                # API communication layer
+│   ├── types/              # TypeScript type definitions
+│   ├── styles/             # CSS/SCSS styles
+│   └── assets/             # Images, fonts, etc.
+├── shared/                  # Custom modified packages
+├── package.json            # Project dependencies and scripts
+└── webpack.*.ts           # Build configurations
+```
+
+### **1.2 SRC Folder Architecture**
+
+**File**: `src/`  
+**Location**: `/src/`  
+**Purpose**: Contains ALL application logic, components, and business logic  
+**Key Characteristic**: This is where the complete code base resides with every logic and functionality
+
+**Why SRC Folder is Critical**:
+1. **Centralized Codebase**: All application logic in one place
+2. **Modular Structure**: Organized by feature/functionality
+3. **TypeScript Support**: Full TypeScript implementation
+4. **Build Optimization**: Webpack processes this folder for bundling
+
+### **1.3 Key Directories and Their Purposes**
+
+| Directory | Purpose | Key Files |
+|-----------|---------|-----------|
+| `src/components/` | Reusable UI components | `Button.tsx`, `Input.tsx`, `Modal.tsx` |
+| `src/pages/` | Page-level components | `ChatPage.tsx`, `LoginPage.tsx` |
+| `src/store/` | Redux state management | `store.ts`, `reducers/`, `actions/` |
+| `src/hooks/` | Custom React hooks | `useChat.ts`, `useAuth.ts` |
+| `src/api/` | API communication | `contacts.ts`, `messages.ts` |
+| `src/utils/` | Utility functions | `formatters.ts`, `validators.ts` |
+| `src/types/` | TypeScript definitions | `chat.types.ts`, `user.types.ts` |
+| `src/styles/` | Global styles | `global.scss`, `variables.scss` |
+
+**[⬆ Back to Top](#table-of-contents)**
+
+---
+
+## **Chapter 2: Main Entry Points**
+
+### **2.1 React Entry Point - `index.tsx`**
+
+**File Location**: `/src/index.tsx`  
+**Invocation Point**: Line 1 (`import './wdyr';`)  
+**Initiator Action**: Loaded by webpack as part of the `app` bundle, executed after Converse.js loads  
+**Primary Responsibility**: Bootstrap React application with all providers
+
+```typescript
+/**
+ * FILE: index.tsx
+ * PATH: /src/index.tsx
+ * 
+ * REACT APPLICATION ENTRY POINT
+ * This is the MAIN ENTRY POINT of the React application.
+ * Everything starts from this file in the React world.
+ * 
+ * EXECUTION FLOW:
+ * 1. Webpack loads this as part of the 'app' bundle
+ * 2. Browser executes this code after Converse.js is ready
+ * 3. Creates React root and mounts application
+ * 4. Wraps app with all necessary providers
+ * 
+ * KEY RESPONSIBILITY: 
+ * - Create React root and mount application to #root element
+ * - Wrap application with all necessary providers
+ * - Register service worker for PWA functionality
+ */
+
+import './wdyr'; // Why Did You Render (development only)
+import React, { StrictMode } from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import { Provider } from 'react-redux';
+
+// State management imports
+import store, { persistor } from './store';
+import { BrowserRouter } from 'react-router-dom';
+import { registerServiceWorker } from './serviceWorkerRegistration';
+import DuplicateTabHandler from './DuplicateTabHandler';
+import { PersistGate } from 'redux-persist/integration/react';
+
+/**
+ * CREATE REACT ROOT
+ * Gets the root DOM element from public/index.html
+ * This is where the React application will be mounted
+ * 
+ * Element: <div id="root"></div> from index.html
+ */
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+
+/**
+ * RENDER APPLICATION
+ * This is where the React application tree is constructed and rendered.
+ * The application is wrapped with multiple providers in this order:
+ * 
+ * 1. Redux Provider: Makes Redux store available to all components
+ * 2. PersistGate: Handles rehydration of persisted Redux state
+ * 3. BrowserRouter: Enables client-side routing
+ * 4. StrictMode: React development checks
+ * 5. DuplicateTabHandler: Prevents multiple tabs of the app
+ * 6. App: The main application component
+ */
+root.render(
+  <Provider store={store}>
+    <PersistGate loading={null} persistor={persistor}>
+      <BrowserRouter>
+        <StrictMode>
+          <DuplicateTabHandler>
+            <App />
+          </DuplicateTabHandler>
+        </StrictMode>
+      </BrowserRouter>
+    </PersistGate>
+  </Provider>
+);
+
+/**
+ * REGISTER SERVICE WORKER
+ * Enables Progressive Web App features:
+ * - Offline functionality
+ * - Background sync
+ * - Push notifications
+ * 
+ * Called after React mounts to ensure app is interactive
+ * before background tasks start
+ */
+registerServiceWorker();
+```
+
+### **2.2 App Component - `App.tsx`**
+
+**File Location**: `/src/App.tsx`  
+**Purpose**: Main application component that contains the layout and routing  
+**Key Responsibility**: Defines the overall application structure and routes
+
+```tsx
+/**
+ * FILE: App.tsx
+ * PATH: /src/App.tsx
+ * 
+ * MAIN APPLICATION COMPONENT
+ * This is the root component of the React application.
+ * It defines the layout and routing structure.
+ * 
+ * KEY FEATURES:
+ * - Defines application layout
+ * - Configures routing
+ * - Contains main UI structure
+ * - Only this component's content changes on navigation
+ */
+
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import ChatPage from './pages/ChatPage';
+import LoginPage from './pages/LoginPage';
+import SettingsPage from './pages/SettingsPage';
+
+const App = () => {
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<ChatPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        {/* Other routes */}
+      </Routes>
+    </Layout>
+  );
+};
+
+export default App;
+```
+
+### **2.3 Public HTML File - `public/index.html`**
+
+**File Location**: `/public/index.html`  
+**Purpose**: Single HTML file that serves as the application container  
+**Key Element**: `<div id="root"></div>` where React mounts the application
+
+```html
+<!-- 
+FILE: index.html
+PATH: /public/index.html
+
+SINGLE PAGE APPLICATION HTML FILE
+This is the ONLY HTML file in the application.
+React renders everything inside the #root div.
+
+KEY CONCEPT: Single Page Application (SPA)
+- One HTML file
+- No page reloads
+- Content updates dynamically
+- URL changes without full page refresh
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Meta tags, title, stylesheets -->
+</head>
+<body>
+  <!-- 
+  ROOT CONTAINER
+  React mounts the entire application here
+  This div NEVER gets replaced, only its content updates
+  -->
+  <div id="root"></div>
+  
+  <!-- Scripts loaded here -->
+</body>
+</html>
+```
+
+**[⬆ Back to Top](#table-of-contents)**
+
+---
+
+## **Chapter 3: Single Page Application Architecture**
+
+### **3.1 SPA Concept in React**
+
+**Definition**: Single Page Application (SPA) is a web application that loads a single HTML page and dynamically updates content as users interact with the app.
+
+**Traditional Multi-Page Application**:
+```
+Page 1 (index.html) → Click Link → Page 2 (about.html)
+    ↓                       ↓
+Full page load         Full page load
+    ↓                       ↓
+Browser requests      Browser requests
+new HTML file         new HTML file
+```
+
+**React Single Page Application**:
+```
+Single HTML (index.html) → Click Link → Same HTML
+    ↓                            ↓
+React mounts app        React updates content
+    ↓                            ↓
+Content rendered        Content updated dynamically
+    ↓                            ↓
+NO page reload         NO page reload
+```
+
+**Advantages of SPA**:
+1. **Faster Navigation**: No full page reloads
+2. **Better UX**: Smooth transitions between views
+3. **Reduced Server Load**: Less HTML transferred
+4. **Offline Capability**: Can work with cached data
+
+### **3.2 Virtual DOM vs Real DOM**
+
+**Real DOM (Traditional Approach)**:
+```javascript
+// jQuery example - Direct DOM manipulation
+$('.message').text('New message');  // Updates ALL .message elements
+$('.message').addClass('updated');  // Reflows and repaints
+
+// Problem: Updates entire DOM tree, slow for complex apps
+```
+
+**Virtual DOM (React Approach)**:
+```typescript
+// React example - Virtual DOM diffing
+const MessageComponent = ({ content }) => {
+  return <div className="message">{content}</div>;
+};
+
+// When content changes:
+// 1. Create new Virtual DOM tree
+// 2. Compare with previous Virtual DOM (diffing)
+// 3. Calculate minimal DOM updates
+// 4. Apply ONLY necessary updates to Real DOM
+```
+
+**Performance Comparison**:
+
+| Operation | Real DOM | Virtual DOM |
+|-----------|----------|-------------|
+| **Update 1 message** | Update all messages | Update only changed message |
+| **Add reaction** | Re-render entire message | Update only reaction element |
+| **Edit text** | Re-render message container | Update only text node |
+| **Performance** | Slow (full updates) | Fast (minimal updates) |
+
+### **3.3 React Rendering Mechanism**
+
+**Message Update Example**:
+```tsx
+// Chat application scenario
+const ChatMessage = ({ message, onEdit }) => {
+  // Message has: content, timestamp, reactions, stars, sender info
+  const { content, timestamp, reactions, stars, sender } = message;
+  
+  return (
+    <div className="message">
+      <div className="sender">{sender.name}</div>
+      <div className="content">{content}</div>  {/* Only this updates on edit */}
+      <div className="timestamp">{timestamp}</div>
+      <div className="reactions">
+        {reactions.map(reaction => (
+          <span key={reaction.id}>{reaction.emoji}</span>
+        ))}
+      </div>
+      <div className="stars">{stars} ★</div>
+    </div>
+  );
+};
+
+// When user edits message content:
+// 1. Only the `content` div gets updated
+// 2. Other elements (sender, timestamp, reactions) remain unchanged
+// 3. No re-render of entire message or other messages
+```
+
+**React Root Rendering**:
+```typescript
+// From index.tsx
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+// What happens:
+// 1. React creates Virtual DOM tree of <App />
+// 2. Compares with previous tree (initial render: no previous)
+// 3. Calculates minimal Real DOM updates
+// 4. Updates #root content
+
+// Subsequent updates:
+// 1. State changes trigger re-render
+// 2. New Virtual DOM created
+// 3. Diffing algorithm finds changes
+// 4. Only changed elements update Real DOM
+```
+
+**[⬆ Back to Top](#table-of-contents)**
+
+---
+
+## **Chapter 4: State Management Providers**
+
+### **4.1 Redux Provider (`<Provider store={store}>`)**
+
+**Purpose**: Makes Redux store available to all React components  
+**Location**: `src/index.tsx` line in render method  
+**Dependency**: `react-redux` library
+
+```tsx
+/**
+ * REDUX PROVIDER
+ * Wraps the entire application to provide Redux store access
+ * 
+ * Without Provider:
+ * - Components cannot access Redux store
+ * - Cannot dispatch actions
+ * - Cannot read state
+ * 
+ * With Provider:
+ * - Store available via useSelector, useDispatch hooks
+ * - State updates trigger component re-renders
+ * - Actions can be dispatched from anywhere
+ */
+<Provider store={store}>
+  {/* Entire app has access to Redux store */}
+</Provider>
+```
+
+### **4.2 Redux Architecture Pattern**
+
+**Redux Data Flow**:
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Component │     │    Action   │     │   Reducer   │
+│    (UI)     │────▶│  (Object)   │────▶│  (Function) │
+└─────────────┘     └─────────────┘     └─────────────┘
+                         │                     │
+                         ▼                     ▼
+                  ┌─────────────┐     ┌─────────────┐
+                  │ Middleware  │     │    Store    │
+                  │  (Thunk)    │◀────│  (State)    │
+                  └─────────────┘     └─────────────┘
+                         │                     │
+                         ▼                     ▼
+                  ┌─────────────┐     ┌─────────────┐
+                  │    API      │     │  Component  │
+                  │   Call      │     │   Update    │
+                  └─────────────┘     └─────────────┘
+```
+
+**Example: Message Editing Flow**:
+
+```typescript
+// 1. Component dispatches action
+const handleEditMessage = (messageId, newContent) => {
+  dispatch(editMessageAction(messageId, newContent));
+};
+
+// 2. Action creator
+const editMessageAction = (messageId, content) => ({
+  type: 'MESSAGE_EDIT',
+  payload: { messageId, content }
+});
+
+// 3. Reducer processes action
+const messagesReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'MESSAGE_EDIT':
+      return {
+        ...state,
+        messages: state.messages.map(msg =>
+          msg.id === action.payload.messageId
+            ? { ...msg, content: action.payload.content }
+            : msg
+        )
+      };
+    default:
+      return state;
+  }
+};
+
+// 4. Store updates, components re-render with new state
+```
+
+**API Integration with Redux Thunk**:
+```typescript
+// Async action with API call
+const fetchContacts = () => async (dispatch) => {
+  dispatch({ type: 'CONTACTS_LOADING' });
+  
+  try {
+    const response = await api.get('/contacts');
+    dispatch({
+      type: 'CONTACTS_SUCCESS',
+      payload: response.data
+    });
+  } catch (error) {
+    dispatch({
+      type: 'CONTACTS_ERROR',
+      payload: error.message
+    });
+  }
+};
+```
+
+### **4.3 Redux Persist (`<PersistGate loading={null} persistor={persistor}>`)**
+
+**Problem**: Browser reload resets Redux state to initial state  
+**Solution**: Redux Persist saves state to localStorage and restores it
+
+```tsx
+/**
+ * PERSISTGATE COMPONENT
+ * Handles rehydration of persisted Redux state
+ * 
+ * Without PersistGate:
+ * - Page reload → State reset → Data lost
+ * - User needs to re-authenticate
+ * - Chat history lost
+ * 
+ * With PersistGate:
+ * - Page reload → State restored → Data preserved
+ * - User stays logged in
+ * - Chat history preserved
+ */
+<PersistGate loading={null} persistor={persistor}>
+  {/* App loads only after state is rehydrated */}
+  <App />
+</PersistGate>
+```
+
+**How Redux Persist Works**:
+```
+Initial Load:
+Redux Store → Persist Config → Save to localStorage
+      ↓
+   App uses
+   fresh state
+      ↓
+Browser Reload:
+localStorage → Persist Config → Rehydrate Store
+      ↓
+   App uses
+ restored state
+```
+
+### **4.4 Persist Configuration (`persistConfig.ts`)**
+
+**File Location**: `/src/store/persistConfig.ts`  
+**Purpose**: Defines what state to persist and how
+
+```typescript
+/**
+ * FILE: persistConfig.ts
+ * PATH: /src/store/persistConfig.ts
+ * 
+ * REDUX PERSIST CONFIGURATION
+ * Defines which parts of state to save/restore
+ * 
+ * IMPORTANT: Not all state should be persisted!
+ * Some state (like UI loading flags) should reset on reload
+ */
+
+import storage from 'redux-persist/lib/storage';
+import { createFilter } from 'redux-persist-transform-filter';
+import autoMergeLevel2 from 'redux-persist/es/stateReconciler/autoMergeLevel2';
+
+// Create filters for specific state slices
+const settingsFilter = createFilter('Settings', [
+  'settings', 
+  'isChatDataRequested', 
+  'isWebBookmarkSet'
+]);
+
+const rosterFilter = createFilter('Roster', [
+  'contactsReceivedFromMobile',
+  'threadsReceivedFromMobile', 
+  'batchListReceivedFromMobile',
+  'batchProcessingStatus'
+]);
+
+const callsFilter = createFilter('Calls', ['missedCalls']);
+
+/**
+ * PERSIST CONFIGURATION OBJECT
+ */
+export const persistConfig = {
+  key: 'root',                    // localStorage key
+  storage,                       // Storage engine (localStorage)
+  stateReconciler: autoMergeLevel2, // How to merge states
+  whitelist: ['Settings', 'Roster', 'Calls'], // Only persist these reducers
+  transforms: [settingsFilter, rosterFilter, callsFilter], // Filter specific fields
+};
+```
+
+**Configuration Explained**:
+
+1. **`key: 'root'`**: localStorage key where state is stored
+2. **`storage`**: Storage engine (localStorage by default)
+3. **`whitelist`**: Only these reducer states are persisted
+4. **`transforms`**: Filters to persist only specific fields within reducers
+5. **`stateReconciler`**: How to merge incoming state with initial state
+
+### **4.5 State Reconciliers**
+
+**Purpose**: Control how persisted state merges with initial Redux state during rehydration
+
+**Available Options**:
+
+1. **`hardSet`** (Most Aggressive):
+   ```typescript
+   // Completely replaces initial state with persisted state
+   // Initial state values not in persisted state are DROPPED
+   const config = {
+     stateReconciler: autoMergeLevel1, // Actually hardSet would be different
+   };
+   ```
+
+2. **`autoMergeLevel1`** (Default - Shallow Merge):
+   ```typescript
+   // Shallow merges one level deep
+   // Example:
+   // Initial: { a: 1, b: 2, c: { d: 3 } }
+   // Persisted: { a: 10, c: { e: 4 } }
+   // Result: { a: 10, b: 2, c: { e: 4 } } // c.d is LOST!
+   ```
+
+3. **`autoMergeLevel2`** (Used in Our App - Better Merge):
+   ```typescript
+   // Shallow merges TWO levels deep
+   // Example:
+   // Initial: { a: 1, b: 2, c: { d: 3, f: 5 } }
+   // Persisted: { a: 10, c: { e: 4 } }
+   // Result: { a: 10, b: 2, c: { d: 3, e: 4, f: 5 } } // c.d and c.f PRESERVED!
+   ```
+
+**Why We Use `autoMergeLevel2`**:
+- Preserves nested state structure
+- Merges persisted changes with initial defaults
+- Prevents data loss in nested objects
+- Best for complex state trees
+
+**[⬆ Back to Top](#table-of-contents)**
+
+---
+
+## **Chapter 5: Routing and Navigation**
+
+### **5.1 React Router (`<BrowserRouter>`)**
+
+**Purpose**: Enables client-side routing without page reloads  
+**Dependency**: `react-router-dom` library  
+**Location**: Wraps the main application in `index.tsx`
+
+```tsx
+/**
+ * BROWSERROUTER COMPONENT
+ * Provides routing capabilities using HTML5 History API
+ * 
+ * Key Features:
+ * - Enables client-side routing
+ * - URL changes without page reloads
+ * - Browser back/forward buttons work
+ * - Dynamic route matching
+ */
+<BrowserRouter>
+  {/* All routing happens inside here */}
+  <App />
+</BrowserRouter>
+```
+
+### **5.2 Client-Side Routing**
+
+**How It Works**:
+```typescript
+// Traditional navigation (causes page reload):
+window.location.href = '/chat';  // FULL PAGE RELOAD
+
+// React Router navigation (no page reload):
+import { useNavigate } from 'react-router-dom';
+const navigate = useNavigate();
+navigate('/chat');  // ONLY CONTENT UPDATES
+```
+
+**Route Configuration in `App.tsx`**:
+```tsx
+const App = () => {
+  return (
+    <Layout>
+      <Routes>
+        {/* Route definitions */}
+        <Route path="/" element={<ChatPage />} />
+        <Route path="/chat/:contactId" element={<ChatPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
+    </Layout>
+  );
+};
+```
+
+### **5.3 Navigation Without Page Reloads**
+
+**Traditional Multi-Page App**:
+```
+User clicks link → Browser requests new HTML → Server responds → Full page reload
+    ↓                     ↓                       ↓                 ↓
+HTML replaced    Network request        New HTML file    Complete refresh
+```
+
+**React SPA with Router**:
+```
+User clicks link → Router updates URL → Router renders component → Content updates
+    ↓                   ↓                     ↓                     ↓
+Event handler    History API push    Component renders    DOM partially updates
+```
+
+**Example: Chat Navigation**:
+```tsx
+// User clicks contact to start chat
+const ContactList = () => {
+  const navigate = useNavigate();
+  
+  const handleContactClick = (contactId) => {
+    // Updates URL without page reload
+    navigate(`/chat/${contactId}`);
+    
+    // Only ChatPage component re-renders
+    // Layout remains unchanged
+    // Other contacts remain rendered
+  };
+  
+  return (
+    <div className="contact-list">
+      {contacts.map(contact => (
+        <div 
+          key={contact.id}
+          className="contact"
+          onClick={() => handleContactClick(contact.id)}
+        >
+          {contact.name}
+        </div>
+      ))}
+    </div>
+  );
+};
+```
+
+**[⬆ Back to Top](#table-of-contents)**
+
+---
+
+## **Chapter 6: Development Tools and Utilities**
+
+### **6.1 React Strict Mode (`<StrictMode>`)**
+
+**Purpose**: Development tool that highlights potential problems  
+**Features Only in Development**: Disabled in production builds
+
+```tsx
+/**
+ * STRICTMODE COMPONENT
+ * Development-only tool for detecting problems
+ * 
+ * Checks for:
+ * - Unsafe lifecycle methods
+ * - Legacy API usage
+ * - Unexpected side effects
+ * - Deprecated features
+ */
+<StrictMode>
+  {/* Double-invokes functions in dev to detect side effects */}
+  <App />
+</StrictMode>
+```
+
+**What Strict Mode Does**:
+1. **Double-invokes**: Calls functions twice to detect side effects
+2. **Warning detection**: Identifies deprecated APIs
+3. **Memory leak detection**: Helps find cleanup issues
+4. **Development only**: No effect in production
+
+### **6.2 Duplicate Tab Handler (`<DuplicateTabHandler>`)**
+
+**Purpose**: Prevents multiple instances of the app from interfering  
+**Common Problem**: Multiple tabs cause WebSocket/XMPP conflicts
+
+```tsx
+/**
+ * DUPLICATETABHANDLER COMPONENT
+ * Prevents multiple tabs of the application
+ * 
+ * Why needed:
+ * - XMPP connection conflicts
+ * - State synchronization issues
+ * - Resource duplication
+ * - User experience problems
+ */
+<DuplicateTabHandler>
+  <App />
+</DuplicateTabHandler>
+```
+
+**Implementation Example**:
+```typescript
+// src/components/DuplicateTabHandler.tsx
+const DuplicateTabHandler = ({ children }) => {
+  useEffect(() => {
+    // Check if another tab is already open
+    const channel = new BroadcastChannel('app-tabs');
+    
+    channel.postMessage('new-tab');
+    
+    channel.onmessage = (event) => {
+      if (event.data === 'tab-exists') {
+        // Another tab is open
+        alert('Please use the existing tab');
+        window.close(); // Close this tab
+      }
+    };
+    
+    return () => channel.close();
+  }, []);
+  
+  return <>{children}</>;
+};
+```
+
+### **6.3 Development Mode Features**
+
+**Why Development Mode for Local Development**:
+```bash
+# Development mode features:
+npm run dev  # NODE_ENV=development
+
+# Production mode disables:
+npm run build:prod  # NODE_ENV=production
+```
+
+**Development Mode Benefits**:
+1. **Fast Refresh**: Instant code updates
+2. **Source Maps**: Debug original TypeScript code
+3. **Error Overlays**: In-browser error displays
+4. **Debug Tools**: React DevTools, Redux DevTools
+5. **Verbose Logging**: Detailed console output
+
+**Production Mode Optimizations**:
+1. **Code Minification**: Smaller bundle size
+2. **Tree Shaking**: Remove unused code
+3. **Dead Code Elimination**: Remove unreachable code
+4. **Performance Optimizations**: Faster runtime
+
+**[⬆ Back to Top](#table-of-contents)**
+
+---
+
+This architecture ensures a fast, responsive chat application that handles real-time messaging efficiently while maintaining state across sessions and preventing common issues like duplicate tabs and state loss on reload.
